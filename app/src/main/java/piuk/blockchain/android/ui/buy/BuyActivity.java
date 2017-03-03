@@ -19,12 +19,21 @@ import info.blockchain.wallet.util.MetadataUtil;
 import piuk.blockchain.android.R;
 import piuk.blockchain.android.databinding.ActivityBuyBinding;
 import piuk.blockchain.android.ui.base.BaseAuthActivity;
+import piuk.blockchain.android.ui.buy.api.BuyApi;
+import piuk.blockchain.android.ui.buy.api.BuyFrameWork.ExchangePartnerInterface;
+import piuk.blockchain.android.ui.buy.api.data.BuyResponse;
 import piuk.blockchain.android.ui.home.MainActivity;
 import piuk.blockchain.android.util.annotations.Thunk;
+import retrofit2.Call;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 
-public class BuyActivity extends BaseAuthActivity implements FrontendJavascript<String> {
+public class BuyActivity extends BaseAuthActivity implements FrontendJavascript<String>,
+    ExchangePartnerInterface {
     public static final String TAG = BuyActivity.class.getSimpleName();
     private final String JS_INTERFACE_NAME = "android";
+    private final String PARTNER_URL = "https://api.blockchain.info/";// TODO: 03/03/2017 replace with exchange partner's url
     private final int METADATA_TYPE_EXTERNAL = 3;
     private FrontendJavascriptManager frontendJavascriptManager;
     private PayloadManager payloadManager;
@@ -35,6 +44,14 @@ public class BuyActivity extends BaseAuthActivity implements FrontendJavascript<
 
     @Thunk
     ActivityBuyBinding binding;
+
+    @Override
+    public Retrofit getRetrofitInstance() {
+        return new Retrofit.Builder()
+            .baseUrl(PARTNER_URL)
+            .addConverterFactory(JacksonConverterFactory.create())
+            .build();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -133,5 +150,18 @@ public class BuyActivity extends BaseAuthActivity implements FrontendJavascript<
     public boolean onSupportNavigateUp() {
         onBackPressed();
         return true;
+    }
+
+    public void getSomethingFromApi() throws Exception {
+
+        Call<BuyResponse> something = BuyApi.getSomething("something1","something2");
+
+        Response<BuyResponse> call = something.execute();
+
+        if(call.isSuccessful()) {
+            Log.d(TAG, "getSomethingFromApi: "+call.body().toJson());
+        } else {
+            throw new Exception(call.errorBody().string());
+        }
     }
 }
